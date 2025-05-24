@@ -1,5 +1,5 @@
-# model.py
 import joblib
 
 def load_model():
-    return joblib.load("lung_cancer_real_model.pkl")
+    data = joblib.load("lung_cancer_real_model.pkl")
+    return data["model"], data["features"]

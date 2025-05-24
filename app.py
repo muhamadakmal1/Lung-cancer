@@ -1,21 +1,24 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from model import load_model
 
-# Set the page title
 st.set_page_config(page_title="Lung Cancer Prediction", layout="centered")
-
-# App title
 st.title("🩺 Lung Cancer Prediction App")
 st.markdown("This app predicts the likelihood of lung cancer based on survey responses.")
 
-# --- User Input Form ---
-st.header("Enter Survey Details")
+# Get model and expected feature order
+@st.cache_resource
+def get_model():
+    return load_model()
 
+model, expected_features = get_model()
+
+# User inputs
+st.header("Enter Survey Details")
 age = st.slider("Age", 15, 100, 45)
 gender = st.selectbox("Gender", ["MALE", "FEMALE"])
 smoking = st.selectbox("Do you smoke?", ["YES", "NO"])
+yellow_fingers = st.selectbox("Do you have yellow fingers?", ["YES", "NO"])
 anxiety = st.selectbox("Do you suffer from anxiety?", ["YES", "NO"])
 peer_pressure = st.selectbox("Do you experience peer pressure?", ["YES", "NO"])
 chronic_disease = st.selectbox("Do you have a chronic disease?", ["YES", "NO"])
@@ -28,45 +31,42 @@ shortness_of_breath = st.selectbox("Shortness of breath?", ["YES", "NO"])
 swallowing_difficulty = st.selectbox("Difficulty swallowing?", ["YES", "NO"])
 chest_pain = st.selectbox("Do you have chest pain?", ["YES", "NO"])
 
-# Convert input to DataFrame
-input_data = pd.DataFrame({
-    'AGE': [age],
-    'GENDER': [gender],
-    'SMOKING': [smoking],
-    'ANXIETY': [anxiety],
-    'PEER_PRESSURE': [peer_pressure],
-    'CHRONIC DISEASE': [chronic_disease],
-    'FATIGUE ': [fatigue],
-    'ALLERGY ': [allergy],
-    'WHEEZING': [wheezing],
-    'ALCOHOL CONSUMING': [alcohol],
-    'COUGHING': [coughing],
-    'SHORTNESS OF BREATH': [shortness_of_breath],
-    'SWALLOWING DIFFICULTY': [swallowing_difficulty],
-    'CHEST PAIN': [chest_pain]
-})
-
-# Encode input (YES/NO and MALE/FEMALE)
+# Encode mapping
 mapping = {'YES': 1, 'NO': 0, 'MALE': 1, 'FEMALE': 0}
-input_data = input_data.applymap(lambda x: mapping.get(x, x))
+def encode(x): return mapping.get(x, x)
 
-# --- Dummy Model for Demo (Replace with your trained model) ---
-@st.cache_resource
-def train_dummy_model():
-    # You should load your real training data and model instead of this dummy one
-    from sklearn.datasets import make_classification
-    X_dummy, y_dummy = make_classification(n_samples=200, n_features=14, random_state=42)
-    clf = RandomForestClassifier(random_state=42)
-    clf.fit(X_dummy, y_dummy)
-    return clf
+# Construct input dictionary
+user_input = {
+    'AGE': age,
+    'GENDER': encode(gender),
+    'SMOKING': encode(smoking),
+    'YELLOW_FINGERS': encode(yellow_fingers),
+    'ANXIETY': encode(anxiety),
+    'PEER_PRESSURE': encode(peer_pressure),
+    'CHRONIC DISEASE': encode(chronic_disease),
+    'FATIGUE': encode(fatigue),
+    'ALLERGY': encode(allergy),
+    'WHEEZING': encode(wheezing),
+    'ALCOHOL CONSUMING': encode(alcohol),
+    'COUGHING': encode(coughing),
+    'SHORTNESS OF BREATH': encode(shortness_of_breath),
+    'SWALLOWING DIFFICULTY': encode(swallowing_difficulty),
+    'CHEST PAIN': encode(chest_pain)
+}
 
-model = train_dummy_model()
+# Convert to DataFrame
+input_data = pd.DataFrame([user_input])
 
-# --- Prediction ---
+# Reorder and align columns to match training
+for col in expected_features:
+    if col not in input_data.columns:
+        input_data[col] = 0
+input_data = input_data[expected_features]
+
+# Prediction
 if st.button("Predict"):
     prediction = model.predict(input_data)[0]
     probability = model.predict_proba(input_data)[0][prediction]
-
     if prediction == 1:
         st.error(f"⚠️ High risk of Lung Cancer (Probability: {probability:.2f})")
     else:
