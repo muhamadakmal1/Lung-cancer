@@ -74,7 +74,7 @@
 
 <h3 id="usage">💡 Usage</h3>
 <ol>
-  <li><strong>Train the model (if not already trained)</strong></li>
+  <li><strong>Trained model</strong></li>
   <pre><code>python train_and_save_model.py</code></pre>
 
   <li><strong>Run the Flask application</strong></li>
