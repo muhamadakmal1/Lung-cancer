@@ -79,9 +79,6 @@
 
   <li><strong>Run the Flask application</strong></li>
   <pre><code>python app.py</code></pre>
-
-  <li><strong>Access the application</strong></li>
-  <p>Open your web browser and navigate to <a href="http://localhost:5000" target="_blank">http://localhost:5000</a></p>
 </ol>
 
 <hr>
